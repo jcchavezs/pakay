@@ -10,6 +10,7 @@ Declare a secret manifest:
 
 ```yaml
 ---
+# secrets.yaml
 - name: my_api_account
   description: The account to connect to the API
   sources:
@@ -32,7 +33,10 @@ Declare a secret manifest:
 This, retrieving the secret is as easy as:
 
 ```go
-if err := pakay.LoadSecretsFromBytes([]byte(config), pakay.LoadOptions{}); err != nil {
+//go:embed secrets.yaml
+var secretsConfig string
+
+if err := pakay.LoadSecretsFromBytes([]byte(secretsConfig), pakay.LoadOptions{}); err != nil {
     return fmt.Errorf("loading secrets: %w", err)
 }
 
