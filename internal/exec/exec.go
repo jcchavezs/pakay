@@ -5,9 +5,10 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"log/slog"
 	"os"
 	"os/exec"
+
+	"github.com/jcchavezs/pakay/internal/log"
 )
 
 // Executes shell a command
@@ -22,7 +23,7 @@ func commandContext(ctx context.Context, stderr io.Writer, command string, args 
 	cmd.Stdout = &out
 	cmd.Stderr = stderr
 
-	slog.Debug("Executing command", "command", cmd.String())
+	log.Logger.Debug("Executing command", "command", cmd.String())
 
 	if err := cmd.Run(); err != nil {
 		return nil, fmt.Errorf("%s: %w", cmd.String(), err)
