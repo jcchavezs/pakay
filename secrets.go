@@ -26,7 +26,11 @@ type LoadOptions struct {
 // LoadSecretsFromBytes loads secrets from a YAML manifest provided as a byte slice.
 // The manifest should contain a list of secrets with their names, descriptions, and sources.
 // Each source should specify a type and its configuration.
-func LoadSecretsFromBytes(config []byte, opts LoadOptions) error {
+func LoadSecretsFromBytes(config []byte) error {
+	return LoadSecretsFromBytesWithOptions(config, LoadOptions{})
+}
+
+func LoadSecretsFromBytesWithOptions(config []byte, opts LoadOptions) error {
 	cfg, err := parser.ParseManifest(config, opts.Variables)
 	if err != nil {
 		return fmt.Errorf("parsing manifest: %w", err)
