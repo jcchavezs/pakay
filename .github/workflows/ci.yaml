@@ -1,4 +1,4 @@
-name: build
+name: CI
 
 on:
   push:
@@ -10,7 +10,7 @@ on:
       - 'LICENSE'
 
 jobs:
-  build:
+  test:
     strategy:
         matrix:
             go_version: [ 1.23, 1.24 ]
