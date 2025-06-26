@@ -27,7 +27,7 @@ func TestLoadSecretsFromBytes(t *testing.T) {
 
 		t.Setenv("TEST_ENV_VAR_1", "test_value")
 
-		err := LoadSecretsFromBytes([]byte(config), LoadOptions{})
+		err := LoadSecretsFromBytes([]byte(config))
 		require.NoError(t, err)
 
 		val, ok := GetSecret(context.Background(), "test_secret_1")
@@ -56,7 +56,7 @@ func TestLoadSecretsFromBytes(t *testing.T) {
 
 		t.Setenv("TEST_ENV_VAR", "test_value")
 
-		err := LoadSecretsFromBytes([]byte(config), opt)
+		err := LoadSecretsFromBytesWithOptions([]byte(config), opt)
 		require.NoError(t, err)
 
 		val, ok := GetSecret(context.Background(), "test_secret")
@@ -71,7 +71,7 @@ func TestLoadSecretsFromBytes(t *testing.T) {
   - type: unknown_provider
 `
 
-		err := LoadSecretsFromBytes([]byte(config), LoadOptions{})
+		err := LoadSecretsFromBytes([]byte(config))
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "unknown provider: unknown_provider")
 	})

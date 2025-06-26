@@ -30,7 +30,7 @@ var rootCmd = &cobra.Command{
 			return fmt.Errorf("getting vault flag: %w", err)
 		}
 
-		if err := pakay.LoadSecretsFromBytes([]byte(config), pakay.LoadOptions{
+		if err := pakay.LoadSecretsFromBytesWithOptions([]byte(config), pakay.LoadOptions{
 			Variables: map[string]string{
 				"op_vault": opVault,
 			},
