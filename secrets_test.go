@@ -2,7 +2,6 @@ package pakay
 
 import (
 	"context"
-	_ "embed"
 	"testing"
 
 	"github.com/jcchavezs/pakay/internal/providers/env"
