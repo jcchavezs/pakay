@@ -5,18 +5,32 @@ import (
 	"errors"
 	"os"
 
-	"github.com/jcchavezs/pakay/internal/values"
 	"github.com/jcchavezs/pakay/types"
 )
 
-var Provider types.SecretProvider = func(cfg types.ProviderConfig) (types.SecretGetter, error) {
-	var name, found = values.GetFromMap[string](cfg, "name")
-	if !found {
-		return nil, errors.New("missing env.name value")
-	}
+type Config struct {
+	Name string `yaml:"name"`
+}
 
-	return func(context.Context) (string, bool) {
-		val := os.Getenv(name)
-		return val, val != ""
-	}, nil
+func (c Config) String() string {
+	return c.Name
+}
+
+var Provider = types.SecretProvider{
+	ConfigFactory: func() types.ProviderConfig {
+		return &Config{}
+	},
+	SecretGetterFactory: func(cfg types.ProviderConfig) (types.SecretGetter, error) {
+		var name string
+		if tCfg, ok := cfg.(*Config); ok {
+			name = tCfg.Name
+		} else {
+			return nil, errors.New("invalid config")
+		}
+
+		return func(context.Context) (string, bool) {
+			val := os.Getenv(name)
+			return val, val != ""
+		}, nil
+	},
 }

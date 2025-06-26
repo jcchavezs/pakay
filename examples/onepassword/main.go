@@ -12,8 +12,8 @@ var config = `---
 - name: my_test_credential
   description: Your account
   sources:
-  - type: onepassword_cli
-    onepassword_cli:
+  - type: onepassword
+    onepassword:
       ref: op://{{ $.op_vault }}/my_test_credential/username
 `
 
@@ -43,9 +43,9 @@ var rootCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		val, found := pakay.GetSecret(cmd.Context(), "my_test_credential")
 		if found {
-			fmt.Fprintf(cmd.ErrOrStderr(), "Credential found: %s\n", val)
+			_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "Credential found: %s\n", val)
 		} else {
-			fmt.Fprintln(cmd.ErrOrStderr(), "Credential not found")
+			_, _ = fmt.Fprintln(cmd.ErrOrStderr(), "Credential not found")
 		}
 
 		return nil
