@@ -1,9 +1,15 @@
 package types
 
-import "context"
+import (
+	"context"
+	"fmt"
+)
 
 type (
 	SecretGetter   func(ctx context.Context) (string, bool)
-	SecretProvider func(cfg ProviderConfig) (SecretGetter, error)
-	ProviderConfig map[string]any
+	SecretProvider struct {
+		ConfigFactory       func() ProviderConfig
+		SecretGetterFactory func(cfg ProviderConfig) (SecretGetter, error)
+	}
+	ProviderConfig fmt.Stringer
 )

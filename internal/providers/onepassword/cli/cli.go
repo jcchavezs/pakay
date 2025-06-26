@@ -9,33 +9,47 @@ import (
 	"strings"
 
 	"github.com/jcchavezs/pakay/internal/exec"
-	"github.com/jcchavezs/pakay/internal/values"
 	"github.com/jcchavezs/pakay/types"
 )
 
-var Provider types.SecretProvider = func(cfg types.ProviderConfig) (types.SecretGetter, error) {
-	_, err := exec.Command("command", "-v", "op")
-	if err != nil {
-		return nil, errors.New("1Password CLI not found")
-	}
+type Config struct {
+	Ref string `yaml:"ref"`
+}
 
-	var ref, found = values.GetFromMap[string](cfg, "ref")
-	if !found {
-		return nil, errors.New("missing onepassword_cli.ref value")
-	}
+func (c Config) String() string {
+	return c.Ref
+}
 
-	return func(ctx context.Context) (string, bool) {
-		if out, err := exec.CommandContext(ctx, "op", "account", "list"); err != nil {
-			return "", false
-		} else if len(bytes.TrimSpace(out)) == 0 {
-			_, _ = fmt.Fprintf(os.Stderr, "You can use 1Password by turning on the 1Password desktop app integration by following this instructions:\nhttps://developer.1password.com/docs/cli/get-started/#step-2-turn-on-the-1password-desktop-app-integration\n\n")
-			return "", false
+var Provider = types.SecretProvider{
+	ConfigFactory: func() types.ProviderConfig {
+		return &Config{}
+	},
+	SecretGetterFactory: func(cfg types.ProviderConfig) (types.SecretGetter, error) {
+		_, err := exec.Command("command", "-v", "op")
+		if err != nil {
+			return nil, errors.New("1Password CLI not found")
 		}
 
-		if out, err := exec.CommandContextQ(ctx, "op", "read", ref); err == nil {
-			return strings.TrimSpace(string(out)), true
+		var ref string
+		if tCfg, ok := cfg.(*Config); ok {
+			ref = tCfg.Ref
+		} else {
+			return nil, errors.New("invalid config")
 		}
 
-		return "", false
-	}, nil
+		return func(ctx context.Context) (string, bool) {
+			if out, err := exec.CommandContext(ctx, "op", "account", "list"); err != nil {
+				return "", false
+			} else if len(bytes.TrimSpace(out)) == 0 {
+				_, _ = fmt.Fprintf(os.Stderr, "You can use 1Password by turning on the 1Password desktop app integration by following this instructions:\nhttps://developer.1password.com/docs/cli/get-started/#step-2-turn-on-the-1password-desktop-app-integration\n\n")
+				return "", false
+			}
+
+			if out, err := exec.CommandContextQ(ctx, "op", "read", ref); err == nil {
+				return strings.TrimSpace(string(out)), true
+			}
+
+			return "", false
+		}, nil
+	},
 }

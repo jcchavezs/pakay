@@ -33,7 +33,7 @@ var rootCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		email, found := pakay.GetSecret(cmd.Context(), "your_email")
 		if found {
-			fmt.Fprintf(cmd.OutOrStdout(), "Your e-mail is: %s\n", email)
+			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Your e-mail is: %s\n", email)
 		}
 
 		return nil

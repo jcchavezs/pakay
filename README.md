@@ -1,8 +1,14 @@
 # Pakay
 
-This library allows you to declare your secrets upfront and how they can be retrieved to achieve comprehensive security.
+This library allows you to declare your secrets upfront and provides functions to list and retrieve them achieving a comprehensive security.
 
-This is specially useful when you need to provide different sources depending on different environments. For example, locally you could use a password manager to retrieve secrets vs on CI or production where you use environment variables that are stored safely.
+This is specially useful when you need to provide different sources for secrets depending on different environments. For example, locally you could use a password manager to retrieve secrets vs on CI or production where you use environment variables that are stored safely.
+
+The main goal is to raise visibility to secrets:
+
+1. The developer can declare the secrets and how to retrieve them from different sources
+2. The user will know what secrets they need and how to pass them.
+3. Machines will be able to check whether all secrets required are passed or not.
 
 ## Getting started
 

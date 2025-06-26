@@ -2,7 +2,6 @@ package pakay
 
 import (
 	"context"
-	"os"
 	"testing"
 
 	"github.com/jcchavezs/pakay/internal/providers/env"
@@ -26,7 +25,7 @@ func TestLoadSecretsFromBytes(t *testing.T) {
       name: TEST_ENV_VAR_2
 `
 
-		os.Setenv("TEST_ENV_VAR_1", "test_value")
+		t.Setenv("TEST_ENV_VAR_1", "test_value")
 
 		err := LoadSecretsFromBytes([]byte(config), LoadOptions{})
 		require.NoError(t, err)
@@ -55,7 +54,7 @@ func TestLoadSecretsFromBytes(t *testing.T) {
 			},
 		}
 
-		os.Setenv("TEST_ENV_VAR", "test_value")
+		t.Setenv("TEST_ENV_VAR", "test_value")
 
 		err := LoadSecretsFromBytes([]byte(config), opt)
 		require.NoError(t, err)
@@ -70,8 +69,6 @@ func TestLoadSecretsFromBytes(t *testing.T) {
 - name: test_secret
   sources:
   - type: unknown_provider
-    unknown_provider:
-      key: value
 `
 
 		err := LoadSecretsFromBytes([]byte(config), LoadOptions{})
