@@ -3,6 +3,7 @@ package static
 import (
 	"context"
 	"errors"
+	"strings"
 
 	"github.com/jcchavezs/pakay/types"
 )
@@ -12,7 +13,17 @@ type Config struct {
 }
 
 func (c Config) String() string {
-	return c.Value
+	l := len(c.Value)
+	if l == 0 {
+		return ""
+	}
+
+	hidden := l
+	if l > 4 {
+		hidden = l - 3
+	}
+
+	return string(c.Value[0:l-hidden]) + strings.Repeat("*", hidden)
 }
 
 var Provider = types.SecretProvider{

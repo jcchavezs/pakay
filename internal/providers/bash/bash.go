@@ -31,7 +31,7 @@ var Provider = types.SecretProvider{
 		)
 		if tCfg, ok := cfg.(*Config); ok {
 			command = tCfg.Command
-			timeout = time.Duration(tCfg.TimeoutMS * 1000)
+			timeout = time.Duration(tCfg.TimeoutMS) * time.Millisecond
 		} else {
 			return nil, errors.New("invalid config")
 		}
