@@ -14,7 +14,7 @@ var config = `---
   sources:
   - type: env
     env: 
-      name: YOUR_EMAIL
+      key: YOUR_EMAIL
   - type: stdin
     stdin: 
       prompt: Please insert your e-mail

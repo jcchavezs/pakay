@@ -22,7 +22,7 @@ Declare a secret manifest:
   sources:
   - type: env
     env: 
-      name: MY_API_ACCOUNT
+      key: MY_API_ACCOUNT
   - type: 1password
     1password: 
       ref: op://MY_APP_VAULT/my_api/username
@@ -30,7 +30,7 @@ Declare a secret manifest:
   sources:
   - type: env
     env: 
-      name: MY_API_TOKEN
+      key: MY_API_TOKEN
   - type: 1password
     1password:
       ref: op://MY_APP_VAULT/my_api/password

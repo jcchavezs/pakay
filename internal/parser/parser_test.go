@@ -18,7 +18,7 @@ var successManifest = `---
       prompt: Please insert the JIRA account's email
   - type: env
     env: 
-      name: JIRA_EMAIL
+      key: JIRA_EMAIL
   - type: onepassword
     onepassword: 
       ref: op://{{ $.op_vault }}/jira_email/username
@@ -35,7 +35,7 @@ func TestParseManifest(t *testing.T) {
 	require.Equal(t, "stdin", m[0].Sources[0].Type)
 	require.Equal(t, "Please insert the JIRA account's email", m[0].Sources[0].Config.(*stdin.Config).Prompt)
 	require.Equal(t, "env", m[0].Sources[1].Type)
-	require.Equal(t, "JIRA_EMAIL", m[0].Sources[1].Config.(*env.Config).Name)
+	require.Equal(t, "JIRA_EMAIL", m[0].Sources[1].Config.(*env.Config).Key)
 	require.Equal(t, "onepassword", m[0].Sources[2].Type)
 	require.Equal(t, "op://{{ $.op_vault }}/jira_email/username", m[0].Sources[2].Config.(*onepasswordcli.Config).Ref)
 }

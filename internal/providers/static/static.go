@@ -1,19 +1,18 @@
-package env
+package static
 
 import (
 	"context"
 	"errors"
-	"os"
 
 	"github.com/jcchavezs/pakay/types"
 )
 
 type Config struct {
-	Key string `yaml:"key"`
+	Value string `yaml:"value"`
 }
 
 func (c Config) String() string {
-	return c.Key
+	return c.Value
 }
 
 var Provider = types.SecretProvider{
@@ -21,16 +20,15 @@ var Provider = types.SecretProvider{
 		return &Config{}
 	},
 	SecretGetterFactory: func(cfg types.ProviderConfig) (types.SecretGetter, error) {
-		var key string
+		var val string
 		if tCfg, ok := cfg.(*Config); ok {
-			key = tCfg.Key
+			val = tCfg.Value
 		} else {
 			return nil, errors.New("invalid config")
 		}
 
 		return func(context.Context) (string, bool) {
-			val := os.Getenv(key)
-			return val, val != ""
+			return val, true
 		}, nil
 	},
 }

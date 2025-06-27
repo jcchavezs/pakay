@@ -17,12 +17,12 @@ func TestLoadSecretsFromBytes(t *testing.T) {
   sources:
     - type: env
       env:
-        name: TEST_ENV_VAR_1
+        key: TEST_ENV_VAR_1
 - name: test_secret_2
   sources:
   - type: env
     env:
-      name: TEST_ENV_VAR_2
+      key: TEST_ENV_VAR_2
 `
 
 		t.Setenv("TEST_ENV_VAR_1", "test_value")
@@ -46,7 +46,7 @@ func TestLoadSecretsFromBytes(t *testing.T) {
   sources:
   - type: env
     env:
-      name: {{ $.EnvKey }}
+      key: {{ $.EnvKey }}
 `
 		opt := LoadOptions{
 			Variables: map[string]string{
