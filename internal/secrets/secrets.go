@@ -6,9 +6,14 @@ import (
 )
 
 type (
+	Getter struct {
+		Labels []string
+		types.SecretGetter
+	}
+
 	Secret struct {
 		parser.ManifestEntry
-		Getters []types.SecretGetter
+		Getters []Getter
 	}
 )
 

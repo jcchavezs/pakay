@@ -12,7 +12,7 @@ The main goal is to raise visibility to secrets:
 
 ## Getting started
 
-Declare a secret manifest:
+Declare your secrets' manifest:
 
 ```yaml
 ---
@@ -36,13 +36,13 @@ Declare a secret manifest:
       ref: op://MY_APP_VAULT/my_api/password
 ```
 
-This, retrieving the secret is as easy as:
+After that, retrieving the secret is as easy as:
 
 ```go
 //go:embed secrets.yaml
 var secretsConfig string
 
-if err := pakay.LoadSecretsFromBytes([]byte(secretsConfig), pakay.LoadOptions{}); err != nil {
+if err := pakay.LoadSecretsFromBytes([]byte(secretsConfig)); err != nil {
     return fmt.Errorf("loading secrets: %w", err)
 }
 

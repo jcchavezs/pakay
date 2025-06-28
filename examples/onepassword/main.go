@@ -17,19 +17,16 @@ var config = `---
       ref: op://{{ $.op_vault }}/my_test_credential/username
 `
 
+var opVault string
+
 func init() {
-	rootCmd.PersistentFlags().String("op-vault", "Personal", "The vault for using onepassword CLI")
+	rootCmd.PersistentFlags().StringVar(&opVault, "op-vault", "Personal", "The vault for using onepassword CLI")
 }
 
 var rootCmd = &cobra.Command{
 	Use:  "example",
 	Args: cobra.NoArgs,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-		opVault, err := cmd.Flags().GetString("op-vault")
-		if err != nil {
-			return fmt.Errorf("getting vault flag: %w", err)
-		}
-
 		if err := pakay.LoadSecretsFromBytesWithOptions([]byte(config), pakay.LoadOptions{
 			Variables: map[string]string{
 				"op_vault": opVault,
@@ -41,11 +38,13 @@ var rootCmd = &cobra.Command{
 		return nil
 	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		cmd.Printf("Reading your credential from \"op://%s/my_test_credential/username\"...\n", opVault)
+
 		val, found := pakay.GetSecret(cmd.Context(), "my_test_credential")
 		if found {
-			_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "Credential found: %s\n", val)
+			cmd.PrintErrf("✅ Credential found: %s\n", val)
 		} else {
-			_, _ = fmt.Fprintln(cmd.ErrOrStderr(), "Credential not found")
+			cmd.PrintErrln("🚫 Credential not found")
 		}
 
 		return nil

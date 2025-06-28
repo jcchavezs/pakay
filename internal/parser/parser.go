@@ -12,7 +12,8 @@ import (
 )
 
 type ManifestEntrySource struct {
-	Type   string `yaml:"type"`
+	Type   string   `yaml:"type"`
+	Labels []string `yaml:"labels"`
 	Config types.ProviderConfig
 }
 
@@ -22,7 +23,8 @@ func (s ManifestEntrySource) String() string {
 
 func (s *ManifestEntrySource) UnmarshalYAML(data []byte) error {
 	t := struct {
-		Type string `yaml:"type"`
+		Type   string   `yaml:"type"`
+		Labels []string `yaml:"labels"`
 	}{}
 	if err := yaml.Unmarshal(data, &t); err != nil {
 		return fmt.Errorf("unmarshaling type: %w", err)
@@ -49,6 +51,7 @@ func (s *ManifestEntrySource) UnmarshalYAML(data []byte) error {
 	}
 
 	s.Type = t.Type
+	s.Labels = t.Labels
 	s.Config = tCfg
 
 	return nil
