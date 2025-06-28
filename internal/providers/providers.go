@@ -25,5 +25,5 @@ func init() {
 	RegisterProvider("bash", bash.Provider)
 	RegisterProvider("env", env.Provider)
 	RegisterProvider("stdin", stdin.Provider)
-	RegisterProvider("onepassword", onepasswordcli.Provider)
+	RegisterProvider("1password", onepasswordcli.Provider)
 }

@@ -12,15 +12,15 @@ var config = `---
 - name: my_test_credential
   description: Your account
   sources:
-  - type: onepassword
-    onepassword:
+  - type: 1password
+    1password:
       ref: op://{{ $.op_vault }}/my_test_credential/username
 `
 
 var opVault string
 
 func init() {
-	rootCmd.PersistentFlags().StringVar(&opVault, "op-vault", "Personal", "The vault for using onepassword CLI")
+	rootCmd.PersistentFlags().StringVar(&opVault, "op-vault", "Personal", "The vault for using 1Password CLI")
 }
 
 var rootCmd = &cobra.Command{
