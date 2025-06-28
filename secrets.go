@@ -5,12 +5,12 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"sync"
 
 	"github.com/jcchavezs/pakay/internal/log"
 	"github.com/jcchavezs/pakay/internal/parser"
 	"github.com/jcchavezs/pakay/internal/providers"
 	"github.com/jcchavezs/pakay/internal/secrets"
-	"github.com/jcchavezs/pakay/types"
 )
 
 // RegisterProvider registers a new secret provider with the given name.
@@ -30,6 +30,8 @@ func LoadSecretsFromBytes(config []byte) error {
 	return LoadSecretsFromBytesWithOptions(config, LoadOptions{})
 }
 
+var sMutex sync.RWMutex
+
 func LoadSecretsFromBytesWithOptions(config []byte, opts LoadOptions) error {
 	cfg, err := parser.ParseManifest(config, opts.Variables)
 	if err != nil {
@@ -39,7 +41,7 @@ func LoadSecretsFromBytesWithOptions(config []byte, opts LoadOptions) error {
 	for _, c := range cfg {
 		s := secrets.Secret{
 			ManifestEntry: c,
-			Getters:       make([]types.SecretGetter, 0, len(c.Sources)),
+			Getters:       make([]secrets.Getter, 0, len(c.Sources)),
 		}
 
 		for _, src := range c.Sources {
@@ -53,7 +55,12 @@ func LoadSecretsFromBytesWithOptions(config []byte, opts LoadOptions) error {
 				return fmt.Errorf("building secret getter: %w", err)
 			}
 
-			s.Getters = append(s.Getters, g)
+			sMutex.Lock()
+			s.Getters = append(s.Getters, secrets.Getter{
+				Labels:       src.Labels,
+				SecretGetter: g,
+			})
+			sMutex.Unlock()
 		}
 
 		secrets.All[c.Name] = s
@@ -63,7 +70,9 @@ func LoadSecretsFromBytesWithOptions(config []byte, opts LoadOptions) error {
 		log.SetHandler(opts.LogHandler)
 	}
 
+	sMutex.Lock()
 	secrets.Loaded = true
+	sMutex.Unlock()
 
 	return nil
 }
@@ -74,13 +83,35 @@ func LoadSecretsFromBytesWithOptions(config []byte, opts LoadOptions) error {
 // The function will try each getter associated with the secret until it finds a valid value.
 // If no getter returns a valid value, it will return an empty string and false.
 func GetSecret(ctx context.Context, name string) (string, bool) {
+	return GetSecretWithOptions(ctx, name, SecretOptions{})
+}
+
+type SecretOptions struct {
+	FilterIn FilterIn
+}
+
+func GetSecretWithOptions(ctx context.Context, name string, opts SecretOptions) (string, bool) {
+	sMutex.RLock()
+	if !secrets.Loaded {
+		sMutex.RUnlock()
+		log.Logger.Error("Secrets haven't been loaded yet")
+		return "", false
+	}
+	sMutex.RUnlock()
+
 	s, ok := secrets.All[name]
 	if !ok {
 		return "", false
 	}
 
-	for _, g := range s.Getters {
-		if val, ok := g(ctx); ok {
+	for i, g := range s.Getters {
+		if opts.FilterIn != nil {
+			if !opts.FilterIn(Source{Type: s.ManifestEntry.Sources[i].Type, Labels: g.Labels}) {
+				continue
+			}
+		}
+
+		if val, ok := g.SecretGetter(ctx); ok {
 			return val, true
 		}
 	}
@@ -88,16 +119,27 @@ func GetSecret(ctx context.Context, name string) (string, bool) {
 	return "", false
 }
 
+func AssertSecrets(ctx context.Context) ([]string, error) {
+	return AssertSecretsWithOptions(ctx, AssertOptions{})
+}
+
+type AssertOptions struct {
+	FilterIn FilterIn
+}
+
 // AssertSecrets asserts the availability of the loaded secrets.
 // It is useful to check the secrets before running the command.
-func AssertSecrets(ctx context.Context) ([]string, error) {
+func AssertSecretsWithOptions(ctx context.Context, opts AssertOptions) ([]string, error) {
+	sMutex.RLock()
 	if !secrets.Loaded {
-		return nil, errors.New("secrets haven't been loaded")
+		sMutex.RUnlock()
+		return nil, errors.New("secrets haven't been loaded yet")
 	}
+	sMutex.RUnlock()
 
 	missing := []string{}
 	for name := range secrets.All {
-		if _, ok := GetSecret(ctx, name); !ok {
+		if _, ok := GetSecretWithOptions(ctx, name, (SecretOptions)(opts)); !ok {
 			missing = append(missing, name)
 		}
 	}

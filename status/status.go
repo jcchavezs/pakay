@@ -8,6 +8,7 @@ import (
 )
 
 type SecretStatus struct {
+	filterIn  pakay.FilterIn
 	secret    secrets.Secret
 	available bool
 }
@@ -23,6 +24,12 @@ func (ss SecretStatus) Description() string {
 func (ss SecretStatus) Sources() []string {
 	sources := make([]string, 0, len(ss.secret.Sources))
 	for _, s := range ss.secret.Sources {
+		if ss.filterIn != nil {
+			if !ss.filterIn(pakay.Source{Type: s.Type, Labels: s.Labels}) {
+				continue
+			}
+		}
+
 		sources = append(sources, s.String())
 	}
 
@@ -33,18 +40,27 @@ func (ss SecretStatus) Available() bool {
 	return ss.available
 }
 
-func CheckSecrets(ctx context.Context) ([]SecretStatus, bool) {
+type CheckOptions struct {
+	FilterIn pakay.FilterIn
+}
+
+func CheckSecrets(ctx context.Context) []SecretStatus {
+	return CheckSecretsWithOptions(ctx, CheckOptions{})
+}
+
+func CheckSecretsWithOptions(ctx context.Context, opts CheckOptions) []SecretStatus {
 	ss := make([]SecretStatus, 0, len(secrets.All))
-	allAvailable := true
 
 	for name, s := range secrets.All {
-		_, ok := pakay.GetSecret(ctx, name)
-		allAvailable = allAvailable && ok
+		_, ok := pakay.GetSecretWithOptions(ctx, name, pakay.SecretOptions{
+			FilterIn: opts.FilterIn,
+		})
 		ss = append(ss, SecretStatus{
+			filterIn:  opts.FilterIn,
 			secret:    s,
 			available: ok,
 		})
 	}
 
-	return ss, allAvailable
+	return ss
 }
