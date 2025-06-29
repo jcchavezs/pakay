@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"testing"
 
+	"github.com/jcchavezs/pakay/internal/secrets"
 	"github.com/jcchavezs/pakay/internal/sources/env"
 	"github.com/stretchr/testify/require"
 )
@@ -21,6 +22,11 @@ func (rh *recordHandler) Handle(_ context.Context, r slog.Record) error {
 func (rh *recordHandler) WithAttrs(attrs []slog.Attr) slog.Handler { return rh }
 func (rh *recordHandler) WithGroup(name string) slog.Handler       { return rh }
 
+func unloadSecrets() {
+	secrets.All = make(map[string]secrets.Secret)
+	secrets.Loaded = false
+}
+
 func TestLoadSecretsFromBytes(t *testing.T) {
 	t.Run("secrets are not loaded yet", func(t *testing.T) {
 		val, ok := GetSecret(context.Background(), "test_secret")
@@ -33,6 +39,8 @@ func TestLoadSecretsFromBytes(t *testing.T) {
 	})
 
 	t.Run("loads secrets successfully", func(t *testing.T) {
+		t.Cleanup(unloadSecrets)
+
 		RegisterSource("env", env.Source)
 
 		config := `---
@@ -62,6 +70,8 @@ func TestLoadSecretsFromBytes(t *testing.T) {
 	})
 
 	t.Run("unknown secret", func(t *testing.T) {
+		t.Cleanup(unloadSecrets)
+
 		config := `---`
 
 		lh := &recordHandler{}
@@ -71,18 +81,20 @@ func TestLoadSecretsFromBytes(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		_, ok := GetSecret(context.Background(), "test_secret_2")
+		_, ok := GetSecret(context.Background(), "unknown_secret")
 		require.False(t, ok)
 		require.Len(t, lh.records, 1)
 		require.Equal(t, "Unknown secret", lh.records[0].Message)
 		lh.records[0].Attrs(func(attr slog.Attr) bool {
 			require.Equal(t, "name", attr.Key)
-			require.Equal(t, "test_secret_2", attr.Value.String())
+			require.Equal(t, "unknown_secret", attr.Value.String())
 			return true
 		})
 	})
 
 	t.Run("renders template variables", func(t *testing.T) {
+		t.Cleanup(unloadSecrets)
+
 		RegisterSource("env", env.Source)
 
 		config := `---
@@ -109,6 +121,8 @@ func TestLoadSecretsFromBytes(t *testing.T) {
 	})
 
 	t.Run("returns error for unknown source", func(t *testing.T) {
+		t.Cleanup(unloadSecrets)
+
 		config := `---
 - name: test_secret
   sources:
@@ -121,6 +135,8 @@ func TestLoadSecretsFromBytes(t *testing.T) {
 	})
 
 	t.Run("returns error for duplicated secret", func(t *testing.T) {
+		t.Cleanup(unloadSecrets)
+
 		config := `---
 - name: test_secret
   sources:
