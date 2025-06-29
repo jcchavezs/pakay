@@ -3,5 +3,6 @@ go 1.23.0
 use (
 	.
 	./examples/cli
+	./examples/docs
 	./examples/onepassword
 )

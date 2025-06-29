@@ -3,9 +3,9 @@ package parser
 import (
 	"testing"
 
-	"github.com/jcchavezs/pakay/internal/providers/env"
-	onepasswordcli "github.com/jcchavezs/pakay/internal/providers/onepassword/cli"
-	"github.com/jcchavezs/pakay/internal/providers/stdin"
+	"github.com/jcchavezs/pakay/internal/sources/env"
+	onepasswordcli "github.com/jcchavezs/pakay/internal/sources/onepassword/cli"
+	"github.com/jcchavezs/pakay/internal/sources/stdin"
 	"github.com/stretchr/testify/require"
 )
 

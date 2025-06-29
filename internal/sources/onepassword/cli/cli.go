@@ -20,11 +20,11 @@ func (c Config) String() string {
 	return c.Ref
 }
 
-var Provider = types.SecretProvider{
-	ConfigFactory: func() types.ProviderConfig {
+var Source = types.SecretSource{
+	ConfigFactory: func() types.SourceConfig {
 		return &Config{}
 	},
-	SecretGetterFactory: func(cfg types.ProviderConfig) (types.SecretGetter, error) {
+	SecretGetterFactory: func(cfg types.SourceConfig) (types.SecretGetter, error) {
 		_, err := exec.Command("command", "-v", "op")
 		if err != nil {
 			return nil, errors.New("1Password CLI not found")

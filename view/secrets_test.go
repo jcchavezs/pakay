@@ -1,4 +1,4 @@
-package status
+package view
 
 import (
 	"context"
@@ -6,11 +6,11 @@ import (
 	"testing"
 
 	"github.com/jcchavezs/pakay"
-	_ "github.com/jcchavezs/pakay/internal/providers"
+	_ "github.com/jcchavezs/pakay/internal/sources"
 	"github.com/stretchr/testify/require"
 )
 
-func TestCheckSecrets(t *testing.T) {
+func TestListSecrets(t *testing.T) {
 	config := `---
 - name: test_secret_1
   description: This is a test secret
@@ -27,6 +27,12 @@ func TestCheckSecrets(t *testing.T) {
   - type: env
     env:
       key: TEST_ENV_VAR_2
+- name: test_secret_3
+  sources:
+  - type: env
+    labels: [deprecated]
+    env:
+      key: TEST_ENV_VAR_3
 `
 
 	err := pakay.LoadSecretsFromBytes([]byte(config))
@@ -34,30 +40,34 @@ func TestCheckSecrets(t *testing.T) {
 
 	ctx := context.Background()
 
-	ss := CheckSecretsWithOptions(ctx, CheckOptions{
+	ss := ListSecretsWithOptions(ctx, GetOptions{
 		FilterIn: func(s pakay.Source) bool {
 			return !slices.Contains(s.Labels, "deprecated")
 		},
 	})
 
-	require.Len(t, ss, 2)
+	require.Len(t, ss, 3)
 
 	for _, s := range ss {
-		require.Len(t, ss[0].Sources(), 1)
-		if s.Name() == "test_secret_1" {
+		switch s.Name() {
+		case "test_secret_1":
+			require.Len(t, s.Sources(), 1)
 			require.Equal(t, "This is a test secret", s.Description())
 			require.Equal(t, "env: TEST_ENV_VAR_1", s.Sources()[0])
-			t.Setenv("DEPRECATED_TEST_ENV_VAR_1", "A")
+			t.Setenv("DEPRECATED_TEST_ENV_VAR_1", "my_value")
 			v, ok := s.GetValue(ctx)
 			require.Equal(t, "", v)
 			require.False(t, ok)
 
-			t.Setenv("TEST_ENV_VAR_1", "A")
+			t.Setenv("TEST_ENV_VAR_1", "my_value")
 			v, ok = s.GetValue(ctx)
-			require.Equal(t, "A", v)
+			require.Equal(t, "my_value", v)
 			require.True(t, ok)
-		} else {
+		case "test_secret_2":
+			require.Len(t, s.Sources(), 1)
 			require.Equal(t, "env: TEST_ENV_VAR_2", s.Sources()[0])
+		case "test_secret_3":
+			require.Len(t, s.Sources(), 0)
 		}
 	}
 }

@@ -9,14 +9,14 @@ import (
 
 	"github.com/jcchavezs/pakay/internal/log"
 	"github.com/jcchavezs/pakay/internal/parser"
-	"github.com/jcchavezs/pakay/internal/providers"
 	"github.com/jcchavezs/pakay/internal/secrets"
+	"github.com/jcchavezs/pakay/internal/sources"
 )
 
-// RegisterProvider registers a new secret provider with the given name.
-// If a provider with the same name already exists, it will be overwritten.
-// This function is intended to be used by package authors to add their own secret providers.
-var RegisterProvider = providers.RegisterProvider
+// RegisterSource registers a new secret source with the given name.
+// If a source with the same name already exists, it will be overwritten.
+// This function is intended to be used by package authors to add their own secret sources.
+var RegisterSource = sources.Register
 
 type LoadOptions struct {
 	Variables  map[string]string
@@ -39,15 +39,19 @@ func LoadSecretsFromBytesWithOptions(config []byte, opts LoadOptions) error {
 	}
 
 	for _, c := range cfg {
+		if _, ok := secrets.All[c.Name]; ok {
+			return fmt.Errorf("duplicated declaration for %q", c.Name)
+		}
+
 		s := secrets.Secret{
 			ManifestEntry: c,
 			Getters:       make([]secrets.Getter, 0, len(c.Sources)),
 		}
 
 		for _, src := range c.Sources {
-			p, ok := providers.GetProvider(src.Type)
+			p, ok := sources.Get(src.Type)
 			if !ok {
-				return fmt.Errorf("unknown provider: %s", src.Type)
+				return fmt.Errorf("unknown source: %s", src.Type)
 			}
 
 			g, err := p.SecretGetterFactory(src.Config)
@@ -66,7 +70,9 @@ func LoadSecretsFromBytesWithOptions(config []byte, opts LoadOptions) error {
 		secrets.All[c.Name] = s
 	}
 
-	if opts.LogHandler != nil {
+	if opts.LogHandler == nil {
+		log.SetHandler(DiscardHandler)
+	} else {
 		log.SetHandler(opts.LogHandler)
 	}
 
@@ -90,17 +96,21 @@ type SecretOptions struct {
 	FilterIn FilterIn
 }
 
-func GetSecretWithOptions(ctx context.Context, name string, opts SecretOptions) (string, bool) {
+func checkSecretsAreLoaded() bool {
 	sMutex.RLock()
-	if !secrets.Loaded {
-		sMutex.RUnlock()
+	defer sMutex.RUnlock()
+	return secrets.Loaded
+}
+
+func GetSecretWithOptions(ctx context.Context, name string, opts SecretOptions) (string, bool) {
+	if !checkSecretsAreLoaded() {
 		log.Logger.Error("Secrets haven't been loaded yet")
 		return "", false
 	}
-	sMutex.RUnlock()
 
 	s, ok := secrets.All[name]
 	if !ok {
+		log.Logger.Error("Unknown secret", "name", name)
 		return "", false
 	}
 
@@ -130,12 +140,9 @@ type AssertOptions struct {
 // AssertSecrets asserts the availability of the loaded secrets.
 // It is useful to check the secrets before running the command.
 func AssertSecretsWithOptions(ctx context.Context, opts AssertOptions) ([]string, error) {
-	sMutex.RLock()
-	if !secrets.Loaded {
-		sMutex.RUnlock()
+	if !checkSecretsAreLoaded() {
 		return nil, errors.New("secrets haven't been loaded yet")
 	}
-	sMutex.RUnlock()
 
 	missing := []string{}
 	for name := range secrets.All {

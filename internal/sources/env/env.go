@@ -16,11 +16,11 @@ func (c Config) String() string {
 	return c.Key
 }
 
-var Provider = types.SecretProvider{
-	ConfigFactory: func() types.ProviderConfig {
+var Source = types.SecretSource{
+	ConfigFactory: func() types.SourceConfig {
 		return &Config{}
 	},
-	SecretGetterFactory: func(cfg types.ProviderConfig) (types.SecretGetter, error) {
+	SecretGetterFactory: func(cfg types.SourceConfig) (types.SecretGetter, error) {
 		var key string
 		if tCfg, ok := cfg.(*Config); ok {
 			key = tCfg.Key

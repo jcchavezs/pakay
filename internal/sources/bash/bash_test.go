@@ -16,18 +16,18 @@ func TestConfig_String(t *testing.T) {
 	require.Equal(t, "echo 'test'", config.String())
 }
 
-func TestProvider_ConfigFactory(t *testing.T) {
-	config := Provider.ConfigFactory()
+func TestSource_ConfigFactory(t *testing.T) {
+	config := Source.ConfigFactory()
 	require.IsType(t, &Config{}, config)
 }
 
-func TestProvider_SecretGetterFactory(t *testing.T) {
+func TestSource_SecretGetterFactory(t *testing.T) {
 	t.Run("valid config with successful command", func(t *testing.T) {
 		config := &Config{
 			Command: `echo "test_secret"`,
 		}
 
-		getter, err := Provider.SecretGetterFactory(config)
+		getter, err := Source.SecretGetterFactory(config)
 		require.NoError(t, err)
 		require.NotNil(t, getter)
 
@@ -42,7 +42,7 @@ func TestProvider_SecretGetterFactory(t *testing.T) {
 			Command: "exit 1",
 		}
 
-		getter, err := Provider.SecretGetterFactory(config)
+		getter, err := Source.SecretGetterFactory(config)
 		require.NoError(t, err)
 		require.NotNil(t, getter)
 
@@ -58,7 +58,7 @@ func TestProvider_SecretGetterFactory(t *testing.T) {
 			TimeoutMS: 100,
 		}
 
-		getter, err := Provider.SecretGetterFactory(config)
+		getter, err := Source.SecretGetterFactory(config)
 		require.NoError(t, err)
 		require.NotNil(t, getter)
 
@@ -73,7 +73,7 @@ func TestProvider_SecretGetterFactory(t *testing.T) {
 			Command: `echo "  test_with_spaces  "`,
 		}
 
-		getter, err := Provider.SecretGetterFactory(config)
+		getter, err := Source.SecretGetterFactory(config)
 		require.NoError(t, err)
 		require.NotNil(t, getter)
 
@@ -86,7 +86,7 @@ func TestProvider_SecretGetterFactory(t *testing.T) {
 	t.Run("invalid config type", func(t *testing.T) {
 		invalidConfig := bytes.NewBufferString("invalid")
 
-		getter, err := Provider.SecretGetterFactory(invalidConfig)
+		getter, err := Source.SecretGetterFactory(invalidConfig)
 		require.Error(t, err)
 		require.Nil(t, getter)
 		require.Equal(t, "invalid config", err.Error())

@@ -7,14 +7,14 @@ import (
 	"html/template"
 
 	"github.com/goccy/go-yaml"
-	"github.com/jcchavezs/pakay/internal/providers"
+	"github.com/jcchavezs/pakay/internal/sources"
 	"github.com/jcchavezs/pakay/types"
 )
 
 type ManifestEntrySource struct {
 	Type   string   `yaml:"type"`
 	Labels []string `yaml:"labels"`
-	Config types.ProviderConfig
+	Config types.SourceConfig
 }
 
 func (s ManifestEntrySource) String() string {
@@ -30,24 +30,24 @@ func (s *ManifestEntrySource) UnmarshalYAML(data []byte) error {
 		return fmt.Errorf("unmarshaling type: %w", err)
 	}
 
-	p, ok := providers.GetProvider(t.Type)
+	p, ok := sources.Get(t.Type)
 	if !ok {
-		return fmt.Errorf("unknown provider: %s", t.Type)
+		return fmt.Errorf("unknown source: %s", t.Type)
 	}
 
 	cfg := map[string]json.RawMessage{}
 	if err := yaml.UnmarshalWithOptions(data, &cfg, yaml.UseJSONUnmarshaler()); err != nil {
-		return fmt.Errorf("unmarshaling provider raw configuration: %w", err)
+		return fmt.Errorf("unmarshaling source raw configuration: %w", err)
 	}
 
 	pcfg, ok := cfg[t.Type]
 	if !ok {
-		return fmt.Errorf("missing provider configuration")
+		return fmt.Errorf("missing source configuration")
 	}
 
 	tCfg := p.ConfigFactory()
 	if err := yaml.Unmarshal([]byte(pcfg), tCfg); err != nil {
-		return fmt.Errorf("unmarshaling provider typed configuration: %w", err)
+		return fmt.Errorf("unmarshaling source typed configuration: %w", err)
 	}
 
 	s.Type = t.Type

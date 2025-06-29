@@ -6,10 +6,15 @@ import (
 )
 
 type (
-	SecretGetter   func(ctx context.Context) (string, bool)
-	SecretProvider struct {
-		ConfigFactory       func() ProviderConfig
-		SecretGetterFactory func(cfg ProviderConfig) (SecretGetter, error)
+	// SecretGetter gets a given secret
+	SecretGetter func(ctx context.Context) (string, bool)
+
+	// SecretSource is a source for a given secret
+	SecretSource struct {
+		ConfigFactory       func() SourceConfig
+		SecretGetterFactory func(cfg SourceConfig) (SecretGetter, error)
 	}
-	ProviderConfig fmt.Stringer
+
+	// SourceConfig is the config for a source of a given secret
+	SourceConfig fmt.Stringer
 )

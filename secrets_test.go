@@ -2,15 +2,38 @@ package pakay
 
 import (
 	"context"
+	"log/slog"
 	"testing"
 
-	"github.com/jcchavezs/pakay/internal/providers/env"
+	"github.com/jcchavezs/pakay/internal/sources/env"
 	"github.com/stretchr/testify/require"
 )
 
+type recordHandler struct {
+	records []slog.Record
+}
+
+func (rh *recordHandler) Enabled(context.Context, slog.Level) bool { return true }
+func (rh *recordHandler) Handle(_ context.Context, r slog.Record) error {
+	rh.records = append(rh.records, r)
+	return nil
+}
+func (rh *recordHandler) WithAttrs(attrs []slog.Attr) slog.Handler { return rh }
+func (rh *recordHandler) WithGroup(name string) slog.Handler       { return rh }
+
 func TestLoadSecretsFromBytes(t *testing.T) {
+	t.Run("secrets are not loaded yet", func(t *testing.T) {
+		val, ok := GetSecret(context.Background(), "test_secret")
+		require.False(t, ok)
+		require.Empty(t, val)
+
+		_, err := AssertSecrets(context.Background())
+		require.Error(t, err)
+		require.ErrorContains(t, err, "secrets haven't been loaded yet")
+	})
+
 	t.Run("loads secrets successfully", func(t *testing.T) {
-		RegisterProvider("env", env.Provider)
+		RegisterSource("env", env.Source)
 
 		config := `---
 - name: test_secret_1
@@ -38,8 +61,29 @@ func TestLoadSecretsFromBytes(t *testing.T) {
 		require.False(t, ok)
 	})
 
+	t.Run("unknown secret", func(t *testing.T) {
+		config := `---`
+
+		lh := &recordHandler{}
+
+		err := LoadSecretsFromBytesWithOptions([]byte(config), LoadOptions{
+			LogHandler: lh,
+		})
+		require.NoError(t, err)
+
+		_, ok := GetSecret(context.Background(), "test_secret_2")
+		require.False(t, ok)
+		require.Len(t, lh.records, 1)
+		require.Equal(t, "Unknown secret", lh.records[0].Message)
+		lh.records[0].Attrs(func(attr slog.Attr) bool {
+			require.Equal(t, "name", attr.Key)
+			require.Equal(t, "test_secret_2", attr.Value.String())
+			return true
+		})
+	})
+
 	t.Run("renders template variables", func(t *testing.T) {
-		RegisterProvider("env", env.Provider)
+		RegisterSource("env", env.Source)
 
 		config := `---
 - name: test_secret
@@ -64,15 +108,34 @@ func TestLoadSecretsFromBytes(t *testing.T) {
 		require.Equal(t, "test_value", val)
 	})
 
-	t.Run("returns error for unknown provider", func(t *testing.T) {
+	t.Run("returns error for unknown source", func(t *testing.T) {
 		config := `---
 - name: test_secret
   sources:
-  - type: unknown_provider
+  - type: unknown_source
 `
 
 		err := LoadSecretsFromBytes([]byte(config))
 		require.Error(t, err)
-		require.Contains(t, err.Error(), "unknown provider: unknown_provider")
+		require.Contains(t, err.Error(), "unknown source: unknown_source")
+	})
+
+	t.Run("returns error for duplicated secret", func(t *testing.T) {
+		config := `---
+- name: test_secret
+  sources:
+  - type: env
+    env:
+      key: MY_VAR_1
+- name: test_secret
+  sources:
+  - type: env
+    env:
+      key: MY_VAR_2
+`
+
+		err := LoadSecretsFromBytes([]byte(config))
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "duplicated declaration for \"test_secret\"")
 	})
 }
