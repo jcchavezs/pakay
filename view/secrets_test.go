@@ -40,7 +40,7 @@ func TestListSecrets(t *testing.T) {
 
 	ctx := context.Background()
 
-	ss := ListSecretsWithOptions(ctx, GetOptions{
+	ss := ListSecretsWithOptions(ctx, ListOptions{
 		FilterIn: func(s pakay.Source) bool {
 			return !slices.Contains(s.Labels, "deprecated")
 		},
