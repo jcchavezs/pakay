@@ -38,6 +38,10 @@ var Source = types.SecretSource{
 			return nil, errors.New("invalid config")
 		}
 
+		if val == "" {
+			return nil, errors.New("value cannot be empty")
+		}
+
 		return func(context.Context) (string, bool) {
 			return val, true
 		}, nil

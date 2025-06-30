@@ -37,6 +37,10 @@ var Source = types.SecretSource{
 			return nil, errors.New("invalid config")
 		}
 
+		if ref == "" {
+			return nil, errors.New("ref cannot be empty")
+		}
+
 		return func(ctx context.Context) (string, bool) {
 			if out, err := exec.CommandContext(ctx, "op", "account", "list"); err != nil {
 				return "", false

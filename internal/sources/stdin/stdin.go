@@ -32,6 +32,10 @@ var Source = types.SecretSource{
 			return nil, errors.New("invalid config")
 		}
 
+		if prompt == "" {
+			return nil, errors.New("prompt cannot be empty")
+		}
+
 		return func(ctx context.Context) (string, bool) {
 			_, _ = fmt.Print(prompt + ": ")
 			input, err := term.ReadPassword(int(os.Stdin.Fd()))

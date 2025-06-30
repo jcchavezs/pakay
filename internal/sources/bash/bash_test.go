@@ -83,6 +83,17 @@ func TestSource_SecretGetterFactory(t *testing.T) {
 		require.Equal(t, "test_with_spaces", secret)
 	})
 
+	t.Run("empty ref returns error", func(t *testing.T) {
+		config := &Config{
+			Command: "",
+		}
+
+		getter, err := Source.SecretGetterFactory(config)
+		require.Error(t, err)
+		require.Nil(t, getter)
+		require.Equal(t, "command cannot be empty", err.Error())
+	})
+
 	t.Run("invalid config type", func(t *testing.T) {
 		invalidConfig := bytes.NewBufferString("invalid")
 
