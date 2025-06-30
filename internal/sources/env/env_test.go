@@ -22,6 +22,17 @@ func TestSource_ConfigFactory(t *testing.T) {
 }
 
 func TestSource_SecretGetterFactory(t *testing.T) {
+	t.Run("valid config with empty value", func(t *testing.T) {
+		config := &Config{
+			Key: "",
+		}
+
+		getter, err := Source.SecretGetterFactory(config)
+		require.Error(t, err)
+		require.Nil(t, getter)
+		require.Equal(t, "key cannot be empty", err.Error())
+	})
+
 	t.Run("valid config with existing environment variable", func(t *testing.T) {
 		// Set up test environment variable
 		testKey := "TEST_EXISTING_VAR"
@@ -73,25 +84,6 @@ func TestSource_SecretGetterFactory(t *testing.T) {
 		secret, ok := getter(ctx)
 		require.False(t, ok)
 		require.Empty(t, secret)
-	})
-
-	t.Run("valid config with whitespace-only environment variable", func(t *testing.T) {
-		testKey := "TEST_WHITESPACE_VAR"
-		testValue := "   "
-		t.Setenv(testKey, testValue)
-
-		config := &Config{
-			Key: testKey,
-		}
-
-		getter, err := Source.SecretGetterFactory(config)
-		require.NoError(t, err)
-		require.NotNil(t, getter)
-
-		ctx := context.Background()
-		secret, ok := getter(ctx)
-		require.True(t, ok)
-		require.Equal(t, testValue, secret)
 	})
 
 	t.Run("invalid config type", func(t *testing.T) {

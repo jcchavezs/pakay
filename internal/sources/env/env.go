@@ -28,6 +28,10 @@ var Source = types.SecretSource{
 			return nil, errors.New("invalid config")
 		}
 
+		if key == "" {
+			return nil, errors.New("key cannot be empty")
+		}
+
 		return func(context.Context) (string, bool) {
 			val := os.Getenv(key)
 			return val, val != ""

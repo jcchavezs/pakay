@@ -36,6 +36,10 @@ var Source = types.SecretSource{
 			return nil, errors.New("invalid config")
 		}
 
+		if command == "" {
+			return nil, errors.New("command cannot be empty")
+		}
+
 		return func(ctx context.Context) (string, bool) {
 			if timeout > 0 {
 				var cancelFn context.CancelFunc

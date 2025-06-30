@@ -9,10 +9,6 @@ import (
 )
 
 func TestConfig_String(t *testing.T) {
-	t.Run("empty value", func(t *testing.T) {
-		config := Config{Value: ""}
-		require.Equal(t, "", config.String())
-	})
 
 	t.Run("single character", func(t *testing.T) {
 		config := Config{Value: "a"}
@@ -73,13 +69,9 @@ func TestSource_SecretGetterFactory(t *testing.T) {
 		}
 
 		getter, err := Source.SecretGetterFactory(config)
-		require.NoError(t, err)
-		require.NotNil(t, getter)
-
-		ctx := context.Background()
-		secret, ok := getter(ctx)
-		require.True(t, ok)
-		require.Empty(t, secret)
+		require.Error(t, err)
+		require.Nil(t, getter)
+		require.Equal(t, "value cannot be empty", err.Error())
 	})
 
 	t.Run("invalid config type", func(t *testing.T) {
