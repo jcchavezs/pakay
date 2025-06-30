@@ -27,7 +27,7 @@ var rootCmd = &cobra.Command{
 	Use:  "example",
 	Args: cobra.NoArgs,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-		if err := pakay.LoadSecretsFromBytesWithOptions([]byte(config), pakay.LoadOptions{
+		if err := pakay.LoadSecretsConfigWithOptions([]byte(config), pakay.LoadOptions{
 			Variables: map[string]string{
 				"op_vault": opVault,
 			},

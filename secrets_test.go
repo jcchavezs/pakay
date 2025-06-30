@@ -58,7 +58,7 @@ func TestLoadSecretsFromBytes(t *testing.T) {
 
 		t.Setenv("TEST_ENV_VAR_1", "test_value")
 
-		err := LoadSecretsFromBytes([]byte(config))
+		err := LoadSecretsConfig([]byte(config))
 		require.NoError(t, err)
 
 		val, ok := GetSecret(context.Background(), "test_secret_1")
@@ -76,7 +76,7 @@ func TestLoadSecretsFromBytes(t *testing.T) {
 
 		lh := &recordHandler{}
 
-		err := LoadSecretsFromBytesWithOptions([]byte(config), LoadOptions{
+		err := LoadSecretsConfigWithOptions([]byte(config), LoadOptions{
 			LogHandler: lh,
 		})
 		require.NoError(t, err)
@@ -112,7 +112,7 @@ func TestLoadSecretsFromBytes(t *testing.T) {
 
 		t.Setenv("TEST_ENV_VAR", "test_value")
 
-		err := LoadSecretsFromBytesWithOptions([]byte(config), opt)
+		err := LoadSecretsConfigWithOptions([]byte(config), opt)
 		require.NoError(t, err)
 
 		val, ok := GetSecret(context.Background(), "test_secret")
@@ -129,7 +129,7 @@ func TestLoadSecretsFromBytes(t *testing.T) {
   - type: unknown_source
 `
 
-		err := LoadSecretsFromBytes([]byte(config))
+		err := LoadSecretsConfig([]byte(config))
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "unknown source: unknown_source")
 	})
@@ -150,7 +150,7 @@ func TestLoadSecretsFromBytes(t *testing.T) {
       key: MY_VAR_2
 `
 
-		err := LoadSecretsFromBytes([]byte(config))
+		err := LoadSecretsConfig([]byte(config))
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "duplicated declaration for \"test_secret\"")
 	})
