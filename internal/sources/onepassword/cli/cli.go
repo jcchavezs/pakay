@@ -6,9 +6,11 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	stdexec "os/exec"
 	"strings"
 
 	"github.com/jcchavezs/pakay/internal/exec"
+	"github.com/jcchavezs/pakay/internal/log"
 	"github.com/jcchavezs/pakay/types"
 )
 
@@ -36,12 +38,13 @@ var Source = types.SecretSource{
 			return nil, errors.New("ref cannot be empty")
 		}
 
-		_, err := exec.Command("command", "-v", "op")
-		if err != nil {
-			return nil, errors.New("1Password CLI not found")
-		}
-
 		return func(ctx context.Context) (string, bool) {
+			_, err := stdexec.LookPath("op")
+			if err != nil {
+				log.Logger.Error("1Password CLI not found", "error", err)
+				return "", false
+			}
+
 			if out, err := exec.CommandContext(ctx, "op", "account", "list"); err != nil {
 				return "", false
 			} else if len(bytes.TrimSpace(out)) == 0 {
