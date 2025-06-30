@@ -25,11 +25,6 @@ var Source = types.SecretSource{
 		return &Config{}
 	},
 	SecretGetterFactory: func(cfg types.SourceConfig) (types.SecretGetter, error) {
-		_, err := exec.Command("command", "-v", "op")
-		if err != nil {
-			return nil, errors.New("1Password CLI not found")
-		}
-
 		var ref string
 		if tCfg, ok := cfg.(*Config); ok {
 			ref = tCfg.Ref
@@ -39,6 +34,11 @@ var Source = types.SecretSource{
 
 		if ref == "" {
 			return nil, errors.New("ref cannot be empty")
+		}
+
+		_, err := exec.Command("command", "-v", "op")
+		if err != nil {
+			return nil, errors.New("1Password CLI not found")
 		}
 
 		return func(ctx context.Context) (string, bool) {
