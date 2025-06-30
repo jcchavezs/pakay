@@ -25,7 +25,7 @@ var rootCmd = &cobra.Command{
 	Args: cobra.NoArgs,
 	PreRunE: func(cmd *cobra.Command, args []string) error {
 		if err := pakay.LoadSecretsConfig([]byte(config)); err != nil {
-			return fmt.Errorf("loading secrets: %w", err)
+			return fmt.Errorf("loading secrets config: %w", err)
 		}
 
 		return nil
