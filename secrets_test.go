@@ -27,7 +27,7 @@ func unloadSecrets() {
 	secrets.Loaded = false
 }
 
-func TestLoadSecretsFromBytes(t *testing.T) {
+func TestLoadSecretsConfig(t *testing.T) {
 	t.Run("secrets are not loaded yet", func(t *testing.T) {
 		val, ok := GetSecret(context.Background(), "test_secret")
 		require.False(t, ok)

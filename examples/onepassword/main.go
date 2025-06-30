@@ -32,7 +32,7 @@ var rootCmd = &cobra.Command{
 				"op_vault": opVault,
 			},
 		}); err != nil {
-			return fmt.Errorf("loading secrets: %w", err)
+			return fmt.Errorf("loading secrets config: %w", err)
 		}
 
 		return nil

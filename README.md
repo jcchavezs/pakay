@@ -42,8 +42,8 @@ After that, retrieving the secret is as easy as:
 //go:embed secrets.yaml
 var secretsConfig string
 
-if err := pakay.LoadSecretsFromBytes([]byte(secretsConfig)); err != nil {
-    return fmt.Errorf("loading secrets: %w", err)
+if err := pakay.LoadSecretsConfig([]byte(secretsConfig)); err != nil {
+    return fmt.Errorf("loading secrets config: %w", err)
 }
 
 //...
