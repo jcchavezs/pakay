@@ -50,17 +50,17 @@ func (ss secret) GetValue(ctx context.Context) (string, bool) {
 	})
 }
 
-type GetOptions struct {
+type ListOptions struct {
 	FilterIn pakay.FilterIn
 }
 
 // ListSecrets returns the status of all secrets
 func ListSecrets(ctx context.Context) []Secret {
-	return ListSecretsWithOptions(ctx, GetOptions{})
+	return ListSecretsWithOptions(ctx, ListOptions{})
 }
 
 // ListSecretsWithOptions returns the status of secrets, applying the provided filter if any.
-func ListSecretsWithOptions(ctx context.Context, opts GetOptions) []Secret {
+func ListSecretsWithOptions(ctx context.Context, opts ListOptions) []Secret {
 	ss := make([]Secret, 0, len(secrets.All))
 
 	for _, s := range secrets.All {
