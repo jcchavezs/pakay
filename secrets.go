@@ -23,16 +23,16 @@ type LoadOptions struct {
 	LogHandler slog.Handler
 }
 
-// LoadSecretsFromBytes loads secrets from a YAML manifest provided as a byte slice.
+// LoadSecretsConfig loads secrets from a YAML manifest provided as a byte slice.
 // The manifest should contain a list of secrets with their names, descriptions, and sources.
 // Each source should specify a type and its configuration.
-func LoadSecretsFromBytes(config []byte) error {
-	return LoadSecretsFromBytesWithOptions(config, LoadOptions{})
+func LoadSecretsConfig(config []byte) error {
+	return LoadSecretsConfigWithOptions(config, LoadOptions{})
 }
 
 var sMutex sync.RWMutex
 
-func LoadSecretsFromBytesWithOptions(config []byte, opts LoadOptions) error {
+func LoadSecretsConfigWithOptions(config []byte, opts LoadOptions) error {
 	cfg, err := parser.ParseManifest(config, opts.Variables)
 	if err != nil {
 		return fmt.Errorf("parsing manifest: %w", err)
@@ -71,7 +71,7 @@ func LoadSecretsFromBytesWithOptions(config []byte, opts LoadOptions) error {
 	}
 
 	if opts.LogHandler == nil {
-		log.SetHandler(DiscardHandler)
+		log.SetHandler(log.DiscardHandler)
 	} else {
 		log.SetHandler(opts.LogHandler)
 	}
@@ -94,12 +94,6 @@ func GetSecret(ctx context.Context, name string) (string, bool) {
 
 type SecretOptions struct {
 	FilterIn FilterIn
-}
-
-func checkSecretsAreLoaded() bool {
-	sMutex.RLock()
-	defer sMutex.RUnlock()
-	return secrets.Loaded
 }
 
 func GetSecretWithOptions(ctx context.Context, name string, opts SecretOptions) (string, bool) {
@@ -127,6 +121,12 @@ func GetSecretWithOptions(ctx context.Context, name string, opts SecretOptions) 
 	}
 
 	return "", false
+}
+
+func checkSecretsAreLoaded() bool {
+	sMutex.RLock()
+	defer sMutex.RUnlock()
+	return secrets.Loaded
 }
 
 func AssertSecrets(ctx context.Context) ([]string, error) {
