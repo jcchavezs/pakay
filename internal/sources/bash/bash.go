@@ -25,7 +25,7 @@ func (c *Config) Type() string {
 	return "bash"
 }
 
-func (c *Config) SentinelFn() internaltypes.SentinelVal { return internaltypes.SentinelVal{} }
+func (*Config) SentinelFn(internaltypes.SentinelVal) {}
 
 var Source = types.SecretSource{
 	ConfigFactory: func() types.SourceConfig {

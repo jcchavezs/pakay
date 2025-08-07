@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"os"
 	"reflect"
+	"slices"
 	"strings"
 
 	"github.com/jcchavezs/pakay/internal/sources"
+	"github.com/jcchavezs/pakay/types"
 )
 
 func main() {
@@ -18,7 +20,13 @@ func main() {
 	fmt.Fprintln(w, "package pakay")
 	fmt.Fprintln(w, "")
 	fmt.Fprintln(w, "import (")
-	for _, s := range sources.GetAll() {
+
+	ss := sources.GetAll()
+	slices.SortFunc(ss, func(a, b types.SecretSource) int {
+		return strings.Compare(a.ConfigFactory().Type(), b.ConfigFactory().Type())
+	})
+
+	for _, s := range ss {
 		e := reflect.ValueOf(s.ConfigFactory()).Elem()
 		pkg := e.Type().PkgPath()
 		fmt.Fprintf(w, "\t%q\n", pkg)
@@ -26,7 +34,8 @@ func main() {
 	fmt.Fprintln(w, ")")
 	fmt.Fprintln(w, "")
 	fmt.Fprintln(w, "type (")
-	for _, s := range sources.GetAll() {
+
+	for _, s := range ss {
 		f := s.ConfigFactory()
 		e := reflect.ValueOf(f).Elem()
 

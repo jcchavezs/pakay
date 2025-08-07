@@ -1,6 +1,9 @@
 package sources
 
 import (
+	"maps"
+	"slices"
+
 	"github.com/jcchavezs/pakay/internal/sources/bash"
 	"github.com/jcchavezs/pakay/internal/sources/env"
 	onepasswordcli "github.com/jcchavezs/pakay/internal/sources/onepassword/cli"
@@ -22,8 +25,8 @@ func Get(name string) (types.SecretSource, bool) {
 	return p, ok
 }
 
-func GetAll() map[string]types.SecretSource {
-	return sources
+func GetAll() []types.SecretSource {
+	return slices.Collect(maps.Values(sources))
 }
 
 func init() {

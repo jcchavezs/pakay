@@ -23,7 +23,7 @@ func (*Config) Type() string {
 	return "env"
 }
 
-func (c *Config) SentinelFn() internaltypes.SentinelVal { return internaltypes.SentinelVal{} }
+func (*Config) SentinelFn(internaltypes.SentinelVal) {}
 
 var Source = types.SecretSource{
 	ConfigFactory: func() types.SourceConfig {
