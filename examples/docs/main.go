@@ -32,6 +32,7 @@ var rootCmd = &cobra.Command{
 		return nil
 	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		fmt.Fprintln(os.Stdout, "Generating SECRETS.md...")
 		ss := view.ListSecrets(cmd.Context())
 
 		cmd.Println("# Secrets List")

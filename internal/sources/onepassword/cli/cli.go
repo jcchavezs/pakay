@@ -11,6 +11,7 @@ import (
 
 	"github.com/jcchavezs/pakay/internal/exec"
 	"github.com/jcchavezs/pakay/internal/log"
+	internaltypes "github.com/jcchavezs/pakay/internal/types"
 	"github.com/jcchavezs/pakay/types"
 )
 
@@ -18,9 +19,15 @@ type Config struct {
 	Ref string `yaml:"ref"`
 }
 
-func (c Config) String() string {
+func (c *Config) String() string {
 	return c.Ref
 }
+
+func (*Config) Type() string {
+	return "1password"
+}
+
+func (c *Config) SentinelFn() internaltypes.SentinelVal { return internaltypes.SentinelVal{} }
 
 var Source = types.SecretSource{
 	ConfigFactory: func() types.SourceConfig {

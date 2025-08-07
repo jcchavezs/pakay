@@ -8,16 +8,23 @@ import (
 
 	"github.com/jcchavezs/pakay/internal/log"
 
+	internaltypes "github.com/jcchavezs/pakay/internal/types"
+
 	"github.com/jcchavezs/pakay/types"
 	"golang.org/x/term"
 )
 
 type Config struct {
+	internaltypes.TypedConfig
 	Prompt string `yaml:"prompt"`
 }
 
-func (c Config) String() string {
+func (*Config) String() string {
 	return "prompt"
+}
+
+func (*Config) Type() string {
+	return "stdin"
 }
 
 var Source = types.SecretSource{

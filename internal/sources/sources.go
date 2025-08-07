@@ -9,10 +9,12 @@ import (
 	"github.com/jcchavezs/pakay/types"
 )
 
-var sources = map[string]types.SecretSource{}
+var (
+	sources = map[string]types.SecretSource{}
+)
 
-func Register(name string, p types.SecretSource) {
-	sources[name] = p
+func Register(p types.SecretSource) {
+	sources[p.ConfigFactory().Type()] = p
 }
 
 func Get(name string) (types.SecretSource, bool) {
@@ -20,10 +22,14 @@ func Get(name string) (types.SecretSource, bool) {
 	return p, ok
 }
 
+func GetAll() map[string]types.SecretSource {
+	return sources
+}
+
 func init() {
-	Register("static", static.Source)
-	Register("bash", bash.Source)
-	Register("env", env.Source)
-	Register("stdin", stdin.Source)
-	Register("1password", onepasswordcli.Source)
+	Register(static.Source)
+	Register(bash.Source)
+	Register(env.Source)
+	Register(stdin.Source)
+	Register(onepasswordcli.Source)
 }

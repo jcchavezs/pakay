@@ -41,7 +41,7 @@ func TestLoadSecretsConfig(t *testing.T) {
 	t.Run("loads secrets successfully", func(t *testing.T) {
 		t.Cleanup(unloadSecrets)
 
-		RegisterSource("env", env.Source)
+		RegisterSource(env.Source)
 
 		config := `---
 - name: test_secret_1
@@ -76,8 +76,8 @@ func TestLoadSecretsConfig(t *testing.T) {
 
 		lh := &recordHandler{}
 
-		err := LoadSecretsConfigWithOptions([]byte(config), LoadOptions{
-			LogHandler: lh,
+		err := LoadSecretsConfigWithOptions([]byte(config), LoadConfigOptions{
+			LoadOptions: LoadOptions{LogHandler: lh},
 		})
 		require.NoError(t, err)
 
@@ -95,7 +95,7 @@ func TestLoadSecretsConfig(t *testing.T) {
 	t.Run("renders template variables", func(t *testing.T) {
 		t.Cleanup(unloadSecrets)
 
-		RegisterSource("env", env.Source)
+		RegisterSource(env.Source)
 
 		config := `---
 - name: test_secret
@@ -104,7 +104,7 @@ func TestLoadSecretsConfig(t *testing.T) {
     env:
       key: {{ $.EnvKey }}
 `
-		opt := LoadOptions{
+		opt := LoadConfigOptions{
 			Variables: map[string]string{
 				"EnvKey": "TEST_ENV_VAR",
 			},

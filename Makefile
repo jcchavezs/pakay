@@ -17,3 +17,7 @@ lint: check-tool-golangci-lint
 .PHONY: vulncheck
 vulncheck: check-tool-govulncheck
 	@govulncheck ./...
+
+.PHONY: generate
+generate: ## Generate code
+	@go generate ./...
