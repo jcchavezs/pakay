@@ -1,6 +1,7 @@
 package stdin
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -20,6 +21,8 @@ func (c Config) String() string {
 	return "prompt"
 }
 
+var readPassword func(int) ([]byte, error) = term.ReadPassword
+
 var Source = types.SecretSource{
 	ConfigFactory: func() types.SourceConfig {
 		return &Config{}
@@ -37,15 +40,16 @@ var Source = types.SecretSource{
 		}
 
 		return func(ctx context.Context) (string, bool) {
-			_, _ = fmt.Print(prompt + ": ")
-			input, err := term.ReadPassword(int(os.Stdin.Fd()))
+			_, _ = fmt.Printf("%s: ", prompt)
+			input, err := readPassword(int(os.Stdin.Fd()))
 			_, _ = fmt.Println("")
 			if err != nil {
 				log.Logger.Error("failed to read from stdin", "error", err)
 				return "", false
 			}
 
-			return string(input), true
+			input = bytes.TrimSpace(input)
+			return string(input), len(input) > 0
 		}, nil
 	},
 }
