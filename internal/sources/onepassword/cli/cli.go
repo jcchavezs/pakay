@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"os"
 	stdexec "os/exec"
-	"strings"
 
 	"github.com/jcchavezs/pakay/internal/exec"
 	"github.com/jcchavezs/pakay/internal/log"
@@ -60,7 +59,7 @@ var Source = types.SecretSource{
 			}
 
 			if out, err := exec.CommandContextQ(ctx, "op", "read", ref); err == nil {
-				return strings.TrimSpace(string(out)), true
+				return string(bytes.TrimSpace(out)), true
 			}
 
 			return "", false
