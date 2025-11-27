@@ -18,6 +18,7 @@ import (
 // This function is intended to be used by package authors to add their own secret sources.
 var RegisterSource = sources.Register
 
+// LoadOptions defines options for loading secrets.
 type LoadOptions struct {
 	Variables  map[string]string
 	LogHandler slog.Handler
@@ -32,6 +33,8 @@ func LoadSecretsConfig(config []byte) error {
 
 var sMutex sync.RWMutex
 
+// LoadSecretsConfigWithOptions loads secrets from a YAML manifest provided as a byte slice,
+// with additional options such as variable substitution and custom logging handler.
 func LoadSecretsConfigWithOptions(config []byte, opts LoadOptions) error {
 	cfg, err := parser.ParseManifest(config, opts.Variables)
 	if err != nil {
@@ -92,10 +95,16 @@ func GetSecret(ctx context.Context, name string) (string, bool) {
 	return GetSecretWithOptions(ctx, name, SecretOptions{})
 }
 
+// SecretOptions defines options for retrieving secrets.
 type SecretOptions struct {
 	FilterIn FilterIn[Source]
 }
 
+// GetSecretWithOptions retrieves the value of a secret by its name with additional options.
+// It returns the secret value and a boolean indicating whether the secret was found.
+// If the secret is not found, it logs an error and returns an empty string and false.
+// The function will try each getter associated with the secret that passes the FilterIn function
+// until it finds a valid value. If no getter returns a valid value, it will return an empty string and false.
 func GetSecretWithOptions(ctx context.Context, name string, opts SecretOptions) (string, bool) {
 	if !checkSecretsAreLoaded() {
 		log.Logger.Error("Secrets haven't been loaded yet")
@@ -129,15 +138,19 @@ func checkSecretsAreLoaded() bool {
 	return secrets.Loaded
 }
 
+// AssertSecrets asserts the availability of the loaded secrets.
+// It is useful to check the secrets before running the command.
 func AssertSecrets(ctx context.Context) ([]string, error) {
 	return AssertSecretsWithOptions(ctx, AssertOptions{})
 }
 
+// AssertOptions defines options for asserting secrets.
 type AssertOptions struct {
 	SecretFilterIn FilterIn[Secret]
 	SourceFilterIn FilterIn[Source]
 }
 
+// Secret represents a secret with its name.
 type Secret struct {
 	Name string
 }
