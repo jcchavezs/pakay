@@ -93,7 +93,7 @@ func GetSecret(ctx context.Context, name string) (string, bool) {
 }
 
 type SecretOptions struct {
-	FilterIn FilterIn
+	FilterIn FilterIn[Source]
 }
 
 func GetSecretWithOptions(ctx context.Context, name string, opts SecretOptions) (string, bool) {
@@ -134,7 +134,12 @@ func AssertSecrets(ctx context.Context) ([]string, error) {
 }
 
 type AssertOptions struct {
-	FilterIn FilterIn
+	SecretFilterIn FilterIn[Secret]
+	SourceFilterIn FilterIn[Source]
+}
+
+type Secret struct {
+	Name string
 }
 
 // AssertSecrets asserts the availability of the loaded secrets.
@@ -146,7 +151,13 @@ func AssertSecretsWithOptions(ctx context.Context, opts AssertOptions) ([]string
 
 	missing := []string{}
 	for name := range secrets.All {
-		if _, ok := GetSecretWithOptions(ctx, name, (SecretOptions)(opts)); !ok {
+		if opts.SecretFilterIn != nil {
+			if !opts.SecretFilterIn(Secret{Name: name}) {
+				continue
+			}
+		}
+
+		if _, ok := GetSecretWithOptions(ctx, name, SecretOptions{FilterIn: opts.SourceFilterIn}); !ok {
 			missing = append(missing, name)
 		}
 	}
