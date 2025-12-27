@@ -18,26 +18,24 @@ import (
 // This function is intended to be used by package authors to add their own secret sources.
 var RegisterSource = sources.Register
 
+type LoadConfigOptions struct {
+	Variables map[string]string
+	LoadOptions
+}
+
 type LoadOptions struct {
-	Variables  map[string]string
 	LogHandler slog.Handler
 }
 
-// LoadSecretsConfig loads secrets from a YAML manifest provided as a byte slice.
-// The manifest should contain a list of secrets with their names, descriptions, and sources.
-// Each source should specify a type and its configuration.
-func LoadSecretsConfig(config []byte) error {
-	return LoadSecretsConfigWithOptions(config, LoadOptions{})
+func LoadSecrets(config SecretsConfig) error {
+	return loadSecretsFromManifestEntries(config.toManifestEntries(), LoadOptions{})
 }
 
-var sMutex sync.RWMutex
+func LoadSecretsWithOptions(config SecretsConfig, opts LoadOptions) error {
+	return loadSecretsFromManifestEntries(config.toManifestEntries(), opts)
+}
 
-func LoadSecretsConfigWithOptions(config []byte, opts LoadOptions) error {
-	cfg, err := parser.ParseManifest(config, opts.Variables)
-	if err != nil {
-		return fmt.Errorf("parsing manifest: %w", err)
-	}
-
+func loadSecretsFromManifestEntries(cfg []parser.ManifestEntry, opts LoadOptions) error {
 	for _, c := range cfg {
 		if _, ok := secrets.All[c.Name]; ok {
 			return fmt.Errorf("duplicated declaration for %q", c.Name)
@@ -56,7 +54,7 @@ func LoadSecretsConfigWithOptions(config []byte, opts LoadOptions) error {
 
 			g, err := p.SecretGetterFactory(src.Config)
 			if err != nil {
-				return fmt.Errorf("building secret getter: %w", err)
+				return fmt.Errorf("building secret getter for %s: %w", p.ConfigFactory().Type(), err)
 			}
 
 			sMutex.Lock()
@@ -81,6 +79,24 @@ func LoadSecretsConfigWithOptions(config []byte, opts LoadOptions) error {
 	sMutex.Unlock()
 
 	return nil
+}
+
+// LoadSecretsConfig loads secrets from a YAML manifest provided as a byte slice.
+// The manifest should contain a list of secrets with their names, descriptions, and sources.
+// Each source should specify a type and its configuration.
+func LoadSecretsConfig(config []byte) error {
+	return LoadSecretsConfigWithOptions(config, LoadConfigOptions{})
+}
+
+var sMutex sync.RWMutex
+
+func LoadSecretsConfigWithOptions(config []byte, opts LoadConfigOptions) error {
+	cfg, err := parser.ParseManifest(config, opts.Variables)
+	if err != nil {
+		return fmt.Errorf("parsing manifest: %w", err)
+	}
+
+	return loadSecretsFromManifestEntries(cfg, opts.LoadOptions)
 }
 
 // GetSecret retrieves the value of a secret by its name.

@@ -3,6 +3,8 @@ package types
 import (
 	"context"
 	"fmt"
+
+	internaltypes "github.com/jcchavezs/pakay/internal/types"
 )
 
 type (
@@ -16,5 +18,9 @@ type (
 	}
 
 	// SourceConfig is the config for a source of a given secret
-	SourceConfig fmt.Stringer
+	SourceConfig interface {
+		fmt.Stringer
+		internaltypes.TypedConfig
+		Type() string
+	}
 )

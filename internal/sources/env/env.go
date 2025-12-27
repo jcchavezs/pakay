@@ -5,16 +5,25 @@ import (
 	"errors"
 	"os"
 
+	internaltypes "github.com/jcchavezs/pakay/internal/types"
+
 	"github.com/jcchavezs/pakay/types"
 )
 
 type Config struct {
+	internaltypes.TypedConfig
 	Key string `yaml:"key"`
 }
 
-func (c Config) String() string {
+func (c *Config) String() string {
 	return c.Key
 }
+
+func (*Config) Type() string {
+	return "env"
+}
+
+func (*Config) SentinelFn(internaltypes.SentinelVal) {}
 
 var Source = types.SecretSource{
 	ConfigFactory: func() types.SourceConfig {

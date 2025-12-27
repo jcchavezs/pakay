@@ -1,7 +1,6 @@
 package env
 
 import (
-	"bytes"
 	"context"
 	"testing"
 
@@ -84,14 +83,5 @@ func TestSource_SecretGetterFactory(t *testing.T) {
 		secret, ok := getter(ctx)
 		require.False(t, ok)
 		require.Empty(t, secret)
-	})
-
-	t.Run("invalid config type", func(t *testing.T) {
-		invalidConfig := bytes.NewBufferString("invalid")
-
-		getter, err := Source.SecretGetterFactory(invalidConfig)
-		require.Error(t, err)
-		require.Nil(t, getter)
-		require.Equal(t, "invalid config", err.Error())
 	})
 }
