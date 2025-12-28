@@ -5,6 +5,8 @@ import (
 	"errors"
 	"strings"
 
+	internaltypes "github.com/jcchavezs/pakay/internal/types"
+
 	"github.com/jcchavezs/pakay/types"
 )
 
@@ -12,7 +14,7 @@ type Config struct {
 	Value string `yaml:"value"`
 }
 
-func (c Config) String() string {
+func (c *Config) String() string {
 	l := len(c.Value)
 	if l == 0 {
 		return ""
@@ -25,6 +27,12 @@ func (c Config) String() string {
 
 	return string(c.Value[0:l-hidden]) + strings.Repeat("*", hidden)
 }
+
+func (*Config) Type() string {
+	return "static"
+}
+
+func (*Config) SentinelFn(internaltypes.SentinelVal) {}
 
 var Source = types.SecretSource{
 	ConfigFactory: func() types.SourceConfig {

@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"time"
 
+	internaltypes "github.com/jcchavezs/pakay/internal/types"
 	"github.com/jcchavezs/pakay/types"
 )
 
@@ -16,9 +17,15 @@ type Config struct {
 	TimeoutMS int    `yaml:"timeout_ms"`
 }
 
-func (c Config) String() string {
+func (c *Config) String() string {
 	return c.Command
 }
+
+func (c *Config) Type() string {
+	return "bash"
+}
+
+func (*Config) SentinelFn(internaltypes.SentinelVal) {}
 
 var Source = types.SecretSource{
 	ConfigFactory: func() types.SourceConfig {

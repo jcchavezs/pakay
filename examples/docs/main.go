@@ -19,7 +19,7 @@ var rootCmd = &cobra.Command{
 	Use:  "example",
 	Args: cobra.NoArgs,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-		if err := pakay.LoadSecretsConfig([]byte(config)); err != nil {
+		if err := pakay.ParseAndLoadSecrets([]byte(config)); err != nil {
 			return fmt.Errorf("loading secrets config: %w", err)
 		}
 
@@ -32,6 +32,7 @@ var rootCmd = &cobra.Command{
 		return nil
 	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		fmt.Fprintln(os.Stdout, "Generating SECRETS.md...")
 		ss := view.ListSecrets(cmd.Context())
 
 		cmd.Println("# Secrets List")

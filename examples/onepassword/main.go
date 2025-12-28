@@ -8,14 +8,22 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var config = `---
-- name: my_test_credential
-  description: Your account
-  sources:
-  - type: 1password
-    1password:
-      ref: op://{{ $.op_vault }}/my_test_credential/username
-`
+func createConfig(opVault string) pakay.SecretsConfig {
+	return pakay.SecretsConfig{
+		{
+			Name:        "my_test_credential",
+			Description: "Your account",
+			Sources: []pakay.SecretSource{
+				{
+					TypedConfig: &pakay.OnePasswordConfig{
+						Ref: fmt.Sprintf("op://%s/my_test_credential/username", opVault),
+					},
+				},
+			},
+		},
+	}
+
+}
 
 var opVault string
 
@@ -27,11 +35,7 @@ var rootCmd = &cobra.Command{
 	Use:  "example",
 	Args: cobra.NoArgs,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-		if err := pakay.LoadSecretsConfigWithOptions([]byte(config), pakay.LoadOptions{
-			Variables: map[string]string{
-				"op_vault": opVault,
-			},
-		}); err != nil {
+		if err := pakay.LoadSecrets(createConfig(opVault)); err != nil {
 			return fmt.Errorf("loading secrets config: %w", err)
 		}
 

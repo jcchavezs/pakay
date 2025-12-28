@@ -43,7 +43,7 @@ func TestLoadSecretsConfig(t *testing.T) {
 	t.Run("loads secrets successfully", func(t *testing.T) {
 		t.Cleanup(unloadSecrets)
 
-		RegisterSource("env", env.Source)
+		RegisterSource(env.Source)
 
 		config := `---
 - name: test_secret_1
@@ -60,7 +60,7 @@ func TestLoadSecretsConfig(t *testing.T) {
 
 		t.Setenv("TEST_ENV_VAR_1", "test_value")
 
-		err := LoadSecretsConfig([]byte(config))
+		err := ParseAndLoadSecrets([]byte(config))
 		require.NoError(t, err)
 
 		val, ok := GetSecret(context.Background(), "test_secret_1")
@@ -78,8 +78,8 @@ func TestLoadSecretsConfig(t *testing.T) {
 
 		lh := &recordHandler{}
 
-		err := LoadSecretsConfigWithOptions([]byte(config), LoadOptions{
-			LogHandler: lh,
+		err := ParseAndLoadSecretsWithOptions([]byte(config), ParseAndLoadOptions{
+			LoadOptions: LoadOptions{LogHandler: lh},
 		})
 		require.NoError(t, err)
 
@@ -97,7 +97,7 @@ func TestLoadSecretsConfig(t *testing.T) {
 	t.Run("renders template variables", func(t *testing.T) {
 		t.Cleanup(unloadSecrets)
 
-		RegisterSource("env", env.Source)
+		RegisterSource(env.Source)
 
 		config := `---
 - name: test_secret
@@ -106,7 +106,7 @@ func TestLoadSecretsConfig(t *testing.T) {
     env:
       key: {{ $.EnvKey }}
 `
-		opt := LoadOptions{
+		opt := ParseAndLoadOptions{
 			Variables: map[string]string{
 				"EnvKey": "TEST_ENV_VAR",
 			},
@@ -114,7 +114,7 @@ func TestLoadSecretsConfig(t *testing.T) {
 
 		t.Setenv("TEST_ENV_VAR", "test_value")
 
-		err := LoadSecretsConfigWithOptions([]byte(config), opt)
+		err := ParseAndLoadSecretsWithOptions([]byte(config), opt)
 		require.NoError(t, err)
 
 		val, ok := GetSecret(context.Background(), "test_secret")
@@ -131,7 +131,7 @@ func TestLoadSecretsConfig(t *testing.T) {
   - type: unknown_source
 `
 
-		err := LoadSecretsConfig([]byte(config))
+		err := ParseAndLoadSecrets([]byte(config))
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "unknown source: unknown_source")
 	})
@@ -152,7 +152,7 @@ func TestLoadSecretsConfig(t *testing.T) {
       key: MY_VAR_2
 `
 
-		err := LoadSecretsConfig([]byte(config))
+		err := ParseAndLoadSecrets([]byte(config))
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "duplicated declaration for \"test_secret\"")
 	})
