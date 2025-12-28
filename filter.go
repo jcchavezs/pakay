@@ -6,4 +6,4 @@ type Source struct {
 }
 
 // FilterIn sources that should be considered in the secret evaluation
-type FilterIn func(Source) bool
+type FilterIn[T any] func(T) bool

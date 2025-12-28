@@ -35,7 +35,7 @@ func TestListSecrets(t *testing.T) {
       key: TEST_ENV_VAR_3
 `
 
-	err := pakay.LoadSecretsConfig([]byte(config))
+	err := pakay.ParseAndLoadSecrets([]byte(config))
 	require.NoError(t, err)
 
 	ctx := context.Background()
