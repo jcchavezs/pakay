@@ -15,7 +15,7 @@ type Secret interface {
 }
 
 type secret struct {
-	filterIn pakay.FilterIn
+	filterIn pakay.FilterIn[pakay.Source]
 	secrets.Secret
 }
 
@@ -51,7 +51,7 @@ func (ss secret) GetValue(ctx context.Context) (string, bool) {
 }
 
 type ListOptions struct {
-	FilterIn pakay.FilterIn
+	FilterIn pakay.FilterIn[pakay.Source]
 }
 
 // ListSecrets returns the status of all secrets

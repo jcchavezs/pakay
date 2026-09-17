@@ -18,22 +18,28 @@ import (
 // This function is intended to be used by package authors to add their own secret sources.
 var RegisterSource = sources.Register
 
-type LoadConfigOptions struct {
+// ParseAndLoadOptions defines options for loading secrets.
+type ParseAndLoadOptions struct {
 	Variables map[string]string
 	LoadOptions
 }
 
+// LoadOptions defines options for loading secrets.
 type LoadOptions struct {
 	LogHandler slog.Handler
 }
 
+// LoadSecrets loads secrets from the provided SecretsConfig.
 func LoadSecrets(config SecretsConfig) error {
 	return loadSecretsFromManifestEntries(config.toManifestEntries(), LoadOptions{})
 }
 
+// LoadSecretsWithOptions loads secrets from the provided SecretsConfig with additional options.
 func LoadSecretsWithOptions(config SecretsConfig, opts LoadOptions) error {
 	return loadSecretsFromManifestEntries(config.toManifestEntries(), opts)
 }
+
+var sMutex sync.RWMutex
 
 func loadSecretsFromManifestEntries(cfg []parser.ManifestEntry, opts LoadOptions) error {
 	for _, c := range cfg {
@@ -81,17 +87,18 @@ func loadSecretsFromManifestEntries(cfg []parser.ManifestEntry, opts LoadOptions
 	return nil
 }
 
-// LoadSecretsConfig loads secrets from a YAML manifest provided as a byte slice.
+// ParseAndLoadSecrets loads secrets from a YAML manifest provided as a byte slice.
 // The manifest should contain a list of secrets with their names, descriptions, and sources.
 // Each source should specify a type and its configuration.
-func LoadSecretsConfig(config []byte) error {
-	return LoadSecretsConfigWithOptions(config, LoadConfigOptions{})
+func ParseAndLoadSecrets(manifest []byte) error {
+	return ParseAndLoadSecretsWithOptions(manifest, ParseAndLoadOptions{})
 }
 
-var sMutex sync.RWMutex
-
-func LoadSecretsConfigWithOptions(config []byte, opts LoadConfigOptions) error {
-	cfg, err := parser.ParseManifest(config, opts.Variables)
+// ParseAndLoadSecretsWithOptions loads secrets from a YAML manifest provided as a byte slice with additional options.
+// The manifest should contain a list of secrets with their names, descriptions, and sources.
+// Each source should specify a type and its configuration.
+func ParseAndLoadSecretsWithOptions(manifest []byte, opts ParseAndLoadOptions) error {
+	cfg, err := parser.ParseManifest(manifest, opts.Variables)
 	if err != nil {
 		return fmt.Errorf("parsing manifest: %w", err)
 	}
@@ -108,10 +115,16 @@ func GetSecret(ctx context.Context, name string) (string, bool) {
 	return GetSecretWithOptions(ctx, name, SecretOptions{})
 }
 
+// SecretOptions defines options for retrieving secrets.
 type SecretOptions struct {
-	FilterIn FilterIn
+	FilterIn FilterIn[Source]
 }
 
+// GetSecretWithOptions retrieves the value of a secret by its name with additional options.
+// It returns the secret value and a boolean indicating whether the secret was found.
+// If the secret is not found, it logs an error and returns an empty string and false.
+// The function will try each getter associated with the secret that passes the FilterIn function
+// until it finds a valid value. If no getter returns a valid value, it will return an empty string and false.
 func GetSecretWithOptions(ctx context.Context, name string, opts SecretOptions) (string, bool) {
 	if !checkSecretsAreLoaded() {
 		log.Logger.Error("Secrets haven't been loaded yet")
@@ -145,12 +158,21 @@ func checkSecretsAreLoaded() bool {
 	return secrets.Loaded
 }
 
+// AssertSecrets asserts the availability of the loaded secrets.
+// It is useful to check the secrets before running the command.
 func AssertSecrets(ctx context.Context) ([]string, error) {
 	return AssertSecretsWithOptions(ctx, AssertOptions{})
 }
 
+// AssertOptions defines options for asserting secrets.
 type AssertOptions struct {
-	FilterIn FilterIn
+	SecretFilterIn FilterIn[Secret]
+	SourceFilterIn FilterIn[Source]
+}
+
+// Secret represents a secret with its name.
+type Secret struct {
+	Name string
 }
 
 // AssertSecrets asserts the availability of the loaded secrets.
@@ -162,7 +184,13 @@ func AssertSecretsWithOptions(ctx context.Context, opts AssertOptions) ([]string
 
 	missing := []string{}
 	for name := range secrets.All {
-		if _, ok := GetSecretWithOptions(ctx, name, (SecretOptions)(opts)); !ok {
+		if opts.SecretFilterIn != nil {
+			if !opts.SecretFilterIn(Secret{Name: name}) {
+				continue
+			}
+		}
+
+		if _, ok := GetSecretWithOptions(ctx, name, SecretOptions{FilterIn: opts.SourceFilterIn}); !ok {
 			missing = append(missing, name)
 		}
 	}
