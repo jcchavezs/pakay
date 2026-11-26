@@ -13,7 +13,7 @@ jobs:
   test:
     strategy:
         matrix:
-            go_version: [ 1.23, 1.24 ]
+            go_version: [ 1.26, 1.27 ]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
